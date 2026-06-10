@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>老師來了！</title>
+  <script>window.p5 = window.p5 || {}; p5.disableFriendlyErrors = true;</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.3/p5.min.js"></script>
+  <style>
+    :root { --ink:#253044; --paper:#fff8e8; --red:#ff4d5b; --gold:#ffd166; --green:#55d187; --blue:#45b7ff; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin:0; min-height:100%; overflow:hidden; color:var(--ink); font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif; background:radial-gradient(circle at 18% 8%,#fff1b7 0%,transparent 34%),radial-gradient(circle at 90% 5%,#b8f7ff 0%,transparent 32%),linear-gradient(135deg,#fff7db 0%,#f9d8bd 52%,#c8e7ff 100%); }
+    #gameShell { width:100vw; height:100vh; display:grid; place-items:center; padding:16px; }
+    #gameCard { width:min(100%,1040px); height:min(100%,720px); position:relative; overflow:hidden; background:#ffe7a3; border:6px solid var(--ink); border-radius:28px; box-shadow:0 24px 0 rgba(37,48,68,.18),0 30px 50px rgba(37,48,68,.22); touch-action:none; }
+    canvas { display:block; width:100%!important; height:100%!important; }
+    #hud { position:absolute; inset:12px 12px auto 12px; z-index:2; display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; pointer-events:none; }
+    .pill { background:rgba(255,248,232,.93); border:3px solid var(--ink); border-radius:999px; padding:7px 12px; font-weight:1000; box-shadow:0 5px 0 rgba(37,48,68,.16); white-space:nowrap; font-size:clamp(12px,1.8vw,16px); }
+    #controls { position:absolute; left:50%; bottom:18px; transform:translateX(-50%); z-index:3; display:flex; gap:12px; width:min(92%,580px); }
+    button { flex:1; min-height:58px; border:4px solid var(--ink); border-radius:18px; font-size:clamp(17px,3vw,28px); font-weight:1000; color:var(--ink); box-shadow:0 8px 0 var(--ink); transform:translateY(0); cursor:pointer; touch-action:manipulation; }
+    button:active, button.active { transform:translateY(7px); box-shadow:0 1px 0 var(--ink); }
+    #playBtn { background:linear-gradient(#6ee7a8,#2fc776); }
+    #studyBtn { background:linear-gradient(#7ed3ff,#37a6ff); }
+    #overlay { position:absolute; inset:0; z-index:4; display:grid; place-items:center; padding:14px; background:rgba(37,48,68,.54); backdrop-filter:blur(4px); }
+    #overlay.hidden { display:none; }
+    #panel { width:min(94%,780px); max-height:94vh; overflow:auto; background:var(--paper); border:6px solid var(--ink); border-radius:26px; padding:22px; text-align:center; box-shadow:0 14px 0 rgba(37,48,68,.28); }
+    #panel h1 { margin:0 0 8px; font-size:clamp(38px,7vw,72px); line-height:.95; color:var(--red); text-shadow:3px 3px 0 var(--ink),6px 6px 0 var(--gold); }
+    #panel p { margin:7px 0; font-size:clamp(15px,2.2vw,18px); font-weight:900; line-height:1.45; }
+    .small { opacity:.78; font-size:14px!important; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+    .modeBtn { min-height:70px; font-size:clamp(16px,2.4vw,22px); line-height:1.15; padding:8px; }
+    #timedBtn, #startBtn { background:linear-gradient(#ffd166,#ff9f1c); }
+    #survivalBtn { background:linear-gradient(#b8f7ff,#45b7ff); }
+    #startBtn { width:100%; margin-top:12px; }
+    #nameInput { width:100%; margin:12px 0 4px; padding:12px 14px; border:4px solid var(--ink); border-radius:16px; background:#fff; color:var(--ink); font:900 18px inherit; text-align:center; outline:none; }
+    #leaderboard { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; text-align:left; }
+    .board { background:#fff3c4; border:3px solid var(--ink); border-radius:16px; padding:10px; box-shadow:0 5px 0 rgba(37,48,68,.14); }
+    .board h3 { margin:0 0 6px; text-align:center; font-size:16px; }
+    .board ol { margin:0; padding-left:24px; font-weight:900; font-size:14px; line-height:1.45; }
+    .board li.empty { list-style:none; margin-left:-20px; opacity:.65; }
+    #tapHint { position:absolute; left:50%; bottom:92px; z-index:2; transform:translateX(-50%); padding:7px 12px; border:3px solid var(--ink); border-radius:999px; background:rgba(255,248,232,.86); font-weight:1000; pointer-events:none; }
+    @media (max-width:720px) {
+      #gameShell { padding:8px; }
+      #gameCard { border-width:4px; border-radius:22px; }
+      #hud { inset:8px; gap:5px; justify-content:center; }
+      .pill { padding:5px 8px; border-width:2px; }
+      #controls { bottom:12px; gap:8px; width:94%; }
+      button { min-height:54px; border-width:3px; border-radius:15px; }
+      #panel { padding:16px 12px; border-width:4px; }
+      #leaderboard { grid-template-columns:1fr; }
+      .row { gap:8px; }
+    }
+  </style>
+</head>
+<body>
+  <main id="gameShell">
+    <section id="gameCard" aria-label="老師來了遊戲區">
+      <div id="hud">
+        <div class="pill">玩家：<span id="playerText">同學</span></div>
+        <div class="pill">分數：<span id="score">0</span></div>
+        <div class="pill">模式：<span id="modeText">未開始</span></div>
+        <div class="pill">時間：<span id="timeText">--</span></div>
+        <div class="pill">最高：<span id="best">0</span></div>
+        <div class="pill">狀態：<span id="stateText">準備上課</span></div>
+      </div>
+      <div id="tapHint">手機：按住畫面偷玩，放開就讀書</div>
+      <div id="controls">
+        <button id="playBtn" aria-label="偷玩手機">📱 偷玩手機</button>
+        <button id="studyBtn" aria-label="假裝讀書">📖 假裝讀書</button>
+      </div>
+      <div id="overlay">
+        <div id="panel">
+          <h1>老師來了！</h1>
+          <p id="panelMain">老師背對你時偷玩手機；老師轉頭時立刻假裝讀書。</p>
+          <p id="panelSub">選擇模式開始挑戰。</p>
+          <input id="nameInput" maxlength="10" value="同學" aria-label="玩家暱稱" />
+          <div class="row">
+            <button id="timedBtn" class="modeBtn">⏱️ 60秒<br>限時挑戰</button>
+            <button id="survivalBtn" class="modeBtn">🛡️ 生存<br>模式</button>
+          </div>
+          <p class="small">教學：1 背對時偷玩加分｜2 黃色警告快收手機｜3 紅色看你時一定要讀書｜4 有時是假動作。</p>
+          <p class="small">電腦：空白鍵偷玩，S / ↓ 讀書，Enter 快速開始60秒。手機：按住遊戲畫面偷玩，放開讀書。</p>
+          <button id="startBtn">開始60秒挑戰</button>
+          <div id="leaderboard"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+<script>
+const ui = {
+  playerText: document.getElementById('playerText'), score: document.getElementById('score'), best: document.getElementById('best'), modeText: document.getElementById('modeText'), timeText: document.getElementById('timeText'), stateText: document.getElementById('stateText'),
+  overlay: document.getElementById('overlay'), panelMain: document.getElementById('panelMain'), panelSub: document.getElementById('panelSub'), nameInput: document.getElementById('nameInput'), leaderboard: document.getElementById('leaderboard'),
+  startBtn: document.getElementById('startBtn'), timedBtn: document.getElementById('timedBtn'), survivalBtn: document.getElementById('survivalBtn'), playBtn: document.getElementById('playBtn'), studyBtn: document.getElementById('studyBtn'), card: document.getElementById('gameCard')
+};
+const game = { running:false, over:false, studying:true, teacherLooking:false, warning:false, mode:'timed', limitMs:60000, score:0, combo:0, time:0, phaseTimer:0, nextLook:1600, lookUntil:0, warningUntil:0, pendingLook:true, fakeWarning:false, message:'準備上課', difficulty:1, shake:0, lastBeep:0, lastWarningSound:0 };
+const STORE = { name:'teacherGameName', timed:'teacherGameLeaderboardTimed', survival:'teacherGameLeaderboardSurvival' };
+let audioCtx = null, playLoopOsc = null, playLoopGain = null;
+
+function getName(){ return (ui.nameInput.value || '同學').trim().slice(0,10) || '同學'; }
+function readBoard(mode){ try { return JSON.parse(localStorage.getItem(mode === 'survival' ? STORE.survival : STORE.timed) || '[]'); } catch { return []; } }
+function writeBoard(mode, board){ localStorage.setItem(mode === 'survival' ? STORE.survival : STORE.timed, JSON.stringify(board.slice(0,10))); }
+function addScore(mode, name, score, survivedMs){ const board = readBoard(mode); board.push({name, score, survivedMs, at:Date.now()}); board.sort((a,b)=> mode==='survival' ? (b.survivedMs-a.survivedMs || b.score-a.score) : (b.score-a.score || b.survivedMs-a.survivedMs)); writeBoard(mode, board); }
+function bestValue(mode){ const b = readBoard(mode)[0]; if(!b) return mode==='survival' ? '0:00' : '0'; return mode==='survival' ? formatTime(b.survivedMs) : String(b.score); }
+function formatTime(ms){ const total=Math.max(0,Math.ceil(ms/1000)); return `${Math.floor(total/60)}:${String(total%60).padStart(2,'0')}`; }
+function renderBoards(){
+  const timed = readBoard('timed'), survival = readBoard('survival');
+  const liTimed = timed.length ? timed.slice(0,5).map(x=>`<li>${esc(x.name)}：${x.score}分</li>`).join('') : '<li class="empty">還沒有紀錄</li>';
+  const liSurv = survival.length ? survival.slice(0,5).map(x=>`<li>${esc(x.name)}：${formatTime(x.survivedMs)}</li>`).join('') : '<li class="empty">還沒有紀錄</li>';
+  ui.leaderboard.innerHTML = `<div class="board"><h3>⏱️ 60秒榜</h3><ol>${liTimed}</ol></div><div class="board"><h3>🛡️ 生存榜</h3><ol>${liSurv}</ol></div>`;
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function ensureAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if(audioCtx.state === 'suspended') audioCtx.resume(); }
+function tone(freq=440, dur=.08, type='square', vol=.05){ try{ ensureAudio(); const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type=type; o.frequency.value=freq; g.gain.setValueAtTime(vol,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+dur); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+dur); }catch{} }
+function sound(name){ if(name==='tap') tone(560,.045,'square',.035); if(name==='score') tone(880,.045,'sine',.025); if(name==='warn'){ tone(320,.08,'sawtooth',.055); setTimeout(()=>tone(260,.09,'sawtooth',.05),90); } if(name==='caught'){ tone(120,.25,'sawtooth',.09); setTimeout(()=>tone(90,.25,'square',.06),120); } if(name==='bell'){ [660,880,990,880].forEach((f,i)=>setTimeout(()=>tone(f,.16,'sine',.06),i*150)); } if(name==='fake') tone(740,.06,'triangle',.04); }
+function startPlayHum(){ if(playLoopOsc || !game.running) return; try{ ensureAudio(); playLoopOsc=audioCtx.createOscillator(); playLoopGain=audioCtx.createGain(); playLoopOsc.type='triangle'; playLoopOsc.frequency.value=150; playLoopGain.gain.value=.012; playLoopOsc.connect(playLoopGain); playLoopGain.connect(audioCtx.destination); playLoopOsc.start(); }catch{} }
+function stopPlayHum(){ try{ if(playLoopOsc){ playLoopGain.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+.05); playLoopOsc.stop(audioCtx.currentTime+.06); } }catch{} playLoopOsc=null; playLoopGain=null; }
+
+function setMenu(title='老師來了！', main='老師背對你時偷玩手機；老師轉頭時立刻假裝讀書。', sub='選擇模式開始挑戰。'){
+  document.querySelector('#panel h1').textContent = title; ui.panelMain.innerHTML = main; ui.panelSub.textContent = sub; ui.startBtn.textContent = game.mode==='survival' ? '開始生存模式' : '開始60秒挑戰'; renderBoards();
+}
+function resetGame(mode=game.mode||'timed'){
+  ensureAudio(); sound('tap'); game.mode=mode; localStorage.setItem(STORE.name,getName()); ui.playerText.textContent=getName(); game.running=true; game.over=false; game.studying=true; game.teacherLooking=false; game.warning=false; game.score=0; game.combo=0; game.time=millis(); game.phaseTimer=millis(); game.nextLook=random(1800,4200); game.lookUntil=0; game.warningUntil=0; game.pendingLook=true; game.fakeWarning=false; game.message='老師背對你，快偷玩！'; game.difficulty=1; game.shake=0; ui.overlay.classList.add('hidden'); updateHUD();
+}
+function gameOver(reason){
+  if(!game.running && game.over) return; game.running=false; game.over=true; stopPlayHum(); game.message=reason; game.shake=reason==='時間到！'?6:18; const survivedMs=Math.max(0,millis()-game.time); addScore(game.mode,getName(),game.score,survivedMs); reason==='時間到！'?sound('bell'):sound('caught'); updateHUD(); ui.overlay.classList.remove('hidden');
+  const title = reason==='時間到！' ? '下課鐘響！' : '被抓到了！';
+  const main = game.mode==='survival' ? `生存時間：<b>${formatTime(survivedMs)}</b>　分數：<b>${game.score}</b>　最佳生存：<b>${bestValue('survival')}</b>` : `你的分數：<b>${game.score}</b>　最高分：<b>${bestValue('timed')}</b>`;
+  const sub = reason==='時間到！' ? '老師：算你運氣好，下課了。' : '老師：上課偷玩手機？下課來辦公室！';
+  setMenu(title, main, sub);
+}
+function updateHUD(){ const elapsed=(game.running||game.over)?Math.max(0,millis()-game.time):0; ui.score.textContent=game.score; ui.modeText.textContent=game.mode==='survival'?'生存':'60秒'; ui.timeText.textContent=game.mode==='survival'?formatTime(elapsed):formatTime(game.limitMs-elapsed); ui.best.textContent=bestValue(game.mode); ui.stateText.textContent=game.message; ui.playerText.textContent=getName(); }
+function setStudying(v){ if(!game.running) return; if(game.studying!==v) sound('tap'); game.studying=v; ui.playBtn.classList.toggle('active',!v); ui.studyBtn.classList.toggle('active',v); v?stopPlayHum():startPlayHum(); }
+
+ui.nameInput.value = localStorage.getItem(STORE.name) || '同學'; renderBoards(); updateHUD();
+ui.nameInput.addEventListener('input',()=>{ localStorage.setItem(STORE.name,getName()); updateHUD(); });
+ui.startBtn.addEventListener('click',()=>resetGame(game.mode||'timed'));
+ui.timedBtn.addEventListener('click',()=>resetGame('timed'));
+ui.survivalBtn.addEventListener('click',()=>resetGame('survival'));
+ui.playBtn.addEventListener('pointerdown',e=>{e.preventDefault(); setStudying(false);});
+ui.playBtn.addEventListener('pointerup',e=>{e.preventDefault(); setStudying(true);});
+ui.playBtn.addEventListener('pointerleave',()=>setStudying(true));
+ui.studyBtn.addEventListener('pointerdown',e=>{e.preventDefault(); setStudying(true);});
+ui.card.addEventListener('pointerdown',e=>{ if(e.target.closest('button,input') || !game.running) return; e.preventDefault(); setStudying(false); });
+ui.card.addEventListener('pointerup',e=>{ if(!game.running) return; e.preventDefault(); setStudying(true); });
+ui.card.addEventListener('pointercancel',()=>setStudying(true)); ui.card.addEventListener('pointerleave',()=>setStudying(true));
+window.addEventListener('keydown',e=>{ if(e.code==='Enter'&&!game.running) resetGame('timed'); if(!game.running) return; if(e.code==='Space'){e.preventDefault(); setStudying(false);} if(e.key.toLowerCase()==='s'||e.code==='ArrowDown') setStudying(true); });
+window.addEventListener('keyup',e=>{ if(game.running&&e.code==='Space') setStudying(true); });
+
+function setup(){ const r=ui.card.getBoundingClientRect(); const c=createCanvas(r.width,r.height); c.parent(ui.card); pixelDensity(1); frameRate(60); textFont('Microsoft JhengHei, Noto Sans TC, sans-serif'); }
+function windowResized(){ const r=ui.card.getBoundingClientRect(); resizeCanvas(r.width,r.height); }
+function draw(){ const now=millis(), dt=deltaTime/1000; handleGame(now,dt); drawClassroom(now); }
+function scheduleNextLook(now, shortBreak=false){ const chaos=random(); const minGap=Math.max(850,(shortBreak?1100:1700)/game.difficulty); let maxGap=Math.max(1800,(chaos<.14?2600:chaos<.34?4200:6200)/game.difficulty); game.phaseTimer=now; game.nextLook=random(minGap,maxGap)+random(-180,520); game.warning=false; game.fakeWarning=false; game.pendingLook=true; }
+function startTeacherWarning(now){ const elapsed=(now-game.time)/1000; game.warning=true; const fakeChance=Math.min(.26,.10+elapsed*.0025); game.fakeWarning=random()<fakeChance; game.pendingLook=!game.fakeWarning; const quick=elapsed>14&&random()<Math.min(.18,.06+elapsed*.002); game.warningUntil=now+(quick?random(220,420):random(Math.max(420,760/game.difficulty),Math.max(680,1350/game.difficulty))); game.message=game.fakeWarning?'老師晃了一下...真的假的？':(quick?'老師突然回頭！':'老師好像要轉頭了！'); if(now-game.lastWarningSound>700){ sound('warn'); game.lastWarningSound=now; } }
+function handleGame(now,dt){ if(!game.running) return; const elapsed=(now-game.time)/1000; game.difficulty=1+elapsed*.028+Math.min(.55,game.score/1600); if(game.mode==='timed'&&elapsed*1000>=game.limitMs){ gameOver('時間到！'); return; } if(!game.teacherLooking&&!game.warning&&now-game.phaseTimer>game.nextLook) startTeacherWarning(now); if(!game.teacherLooking&&game.warning&&now>game.warningUntil){ if(game.pendingLook){ game.teacherLooking=true; game.warning=false; game.lookUntil=now+random(Math.max(680,1050/game.difficulty),Math.max(1050,2400/game.difficulty)); game.message='老師正在看！快讀書！'; game.shake=random(5,10); } else { sound('fake'); game.message='是假動作！快把握時間！'; scheduleNextLook(now,true); } } if(game.teacherLooking&&now>game.lookUntil){ game.teacherLooking=false; scheduleNextLook(now); game.message=random()<.28?'老師低頭改考卷，機會來了！':'老師背對你，快偷玩！'; } if(game.teacherLooking&&!game.studying){ gameOver('被老師抓到！'); return; } if(!game.teacherLooking&&!game.studying){ game.combo+=dt; const add=1+Math.floor(game.combo*2.1); if(frameCount%6===0){ game.score+=add; if(now-game.lastBeep>240){ sound('score'); game.lastBeep=now; } } if(!game.warning) game.message=game.combo>2.2?'連續偷玩中！分數加倍！':'偷玩手機中...'; } else { game.combo=Math.max(0,game.combo-dt*1.8); if(!game.teacherLooking&&!game.warning&&game.studying) game.message='安全但沒加分，找機會偷玩！'; } updateHUD(); }
+function drawClassroom(now){ const w=width,h=height; push(); if(game.shake>0){ translate(random(-game.shake,game.shake),random(-game.shake,game.shake)); game.shake*=.84; } background('#ffd88f'); noStroke(); fill('#fff3c4'); rect(0,0,w,h*.48); fill('#f1b66b'); rect(0,h*.48,w,h*.52); fill('#d98b51'); rect(0,h*.61,w,h*.39); fill('#253044'); rect(w*.12,h*.12,w*.48,h*.2,14); fill('#2f8b72'); rect(w*.13,h*.135,w*.46,h*.15,10); fill(255,255,255,190); textAlign(CENTER,CENTER); textSize(w*.03); text('今日小考：不要偷玩手機',w*.36,h*.21); fill('#fff8e8'); stroke('#253044'); strokeWeight(4); circle(w*.73,h*.16,w*.09); strokeWeight(3); line(w*.73,h*.16,w*.73,h*.125); line(w*.73,h*.16,w*.755,h*.17); noStroke(); const light=game.teacherLooking?'#ff4d5b':(game.warning?'#ffd166':'#55d187'); fill(light); stroke('#253044'); strokeWeight(4); circle(w*.88,h*.16,w*.08); noStroke(); fill('#253044'); textSize(w*.018); text(game.teacherLooking?'看你！':game.warning?'注意':'安全',w*.88,h*.16); drawTeacher(w,h,now); drawDeskAndStudent(w,h,now); drawEffects(w,h,now); pop(); }
+function drawTeacher(w,h,now){ const x=w*.70,y=h*.39,looking=game.teacherLooking; push(); translate(x,y); fill('#3b82f6'); stroke('#253044'); strokeWeight(5); rect(-w*.055,h*.07,w*.11,h*.19,18); fill('#fff8e8'); circle(0,0,w*.105); fill('#30384d'); arc(0,-w*.015,w*.11,w*.08,PI,TWO_PI); fill('#253044'); if(looking){ circle(-w*.02,0,8); circle(w*.02,0,8); stroke('#253044'); strokeWeight(4); line(-w*.025,w*.035,w*.025,w*.035); noStroke(); fill('#ff4d5b'); textSize(w*.035); textAlign(CENTER,CENTER); text('！',w*.065,-w*.04); } else { fill('#30384d'); arc(0,0,w*.095,w*.095,0,TWO_PI); fill('#fff8e8'); textSize(w*.02); textAlign(CENTER,CENTER); text('背對',0,w*.07); } stroke('#253044'); strokeWeight(6); line(-w*.055,h*.11,-w*.1,h*.18); line(w*.055,h*.11,w*.1,h*.18); noStroke(); pop(); }
+function drawDeskAndStudent(w,h,now){ const deskX=w*.34,deskY=h*.64; fill('#8b5a2b'); stroke('#253044'); strokeWeight(5); rect(deskX-w*.19,deskY,w*.38,h*.1,12); fill('#6f431f'); rect(deskX-w*.16,deskY+h*.1,w*.035,h*.16); rect(deskX+w*.125,deskY+h*.1,w*.035,h*.16); noStroke(); const bob=Math.sin(now*.008)*2; fill('#fff8e8'); stroke('#253044'); strokeWeight(5); circle(deskX,deskY-h*.12+bob,w*.115); fill('#51372f'); arc(deskX,deskY-h*.145+bob,w*.12,w*.08,PI,TWO_PI); fill('#253044'); circle(deskX-w*.018,deskY-h*.12+bob,6); circle(deskX+w*.018,deskY-h*.12+bob,6); fill('#ff9f1c'); stroke('#253044'); strokeWeight(5); rect(deskX-w*.07,deskY-h*.06,w*.14,h*.1,18); if(game.studying){ fill('#fff8e8'); stroke('#253044'); strokeWeight(4); rect(deskX-w*.12,deskY-h*.005,w*.24,h*.07,8); line(deskX,deskY,deskX,deskY+h*.06); noStroke(); fill('#45b7ff'); textSize(w*.025); textAlign(CENTER,CENTER); text('認真讀書',deskX,deskY+h*.035); } else { fill('#253044'); stroke('#111827'); strokeWeight(4); rect(deskX-w*.05,deskY-h*.035,w*.1,h*.08,10); fill('#7ed3ff'); noStroke(); rect(deskX-w*.038,deskY-h*.022,w*.076,h*.055,6); fill('#fff'); textSize(w*.019); textAlign(CENTER,CENTER); text('GAME',deskX,deskY+h*.005); fill('#ffd166'); textSize(w*.032); text('+',deskX+w*.09,deskY-h*.045); } }
+function drawEffects(w,h,now){ if(game.warning){ fill(255,209,102,80+Math.sin(now*.02)*50); rect(0,0,w,h); fill('#253044'); textAlign(CENTER,CENTER); textSize(w*.05); text(game.fakeWarning?'老師在試探你！':'老師要轉頭了！',w*.5,h*.39); } if(game.teacherLooking){ fill(255,77,91,42); rect(0,0,w,h); stroke('#ff4d5b'); strokeWeight(8); noFill(); rect(12,12,w-24,h-24,22); noStroke(); } const barW=w*.42,barH=16,x=w*.29,y=h*.88; fill('rgba(255,248,232,.8)'); stroke('#253044'); strokeWeight(3); rect(x,y,barW,barH,99); noStroke(); fill('#ff5f6d'); rect(x+3,y+3,Math.min(barW-6,game.combo/3.2*(barW-6)),barH-6,99); fill('#253044'); textSize(14); textAlign(CENTER,CENTER); text('連續偷玩加成',x+barW/2,y-12); }
+</script>
+</body>
+</html>
