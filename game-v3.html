@@ -25,9 +25,9 @@
     @media(max-width:720px){
       #gameShell{padding:4px;background:#fff6d8}
       #gameCard{border-width:4px;border-radius:18px;box-shadow:0 6px 0 rgba(37,48,68,.16)}
-      #hud{inset:6px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;justify-content:stretch}
-      .pill{font-size:10px;line-height:1.05;padding:4px 5px;border-width:2px;text-align:center;box-shadow:0 2px 0 rgba(37,48,68,.12)}
-      .pill:nth-child(1),.pill:nth-child(3),.pill:nth-child(5){display:none}
+      #hud{inset:6px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;justify-content:stretch;max-width:58%;left:8px;right:auto}
+      .pill{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:10px;line-height:1.05;padding:4px 5px;border-width:2px;text-align:center;box-shadow:0 2px 0 rgba(37,48,68,.12)}
+      .pill:nth-child(1),.pill:nth-child(3),.pill:nth-child(5),.pill:nth-child(6){display:none}
       #blackboard{left:10%;top:22%;width:42%;height:15%;border-width:5px;border-radius:8px;font-size:clamp(13px,4vw,18px)}
       #clock{right:24%;top:22%;width:44px;height:44px;border-width:3px}
       #clock:before{height:15px;width:3px}#clock:after{width:13px;height:3px}
@@ -35,7 +35,7 @@
       #teacher{right:4%;top:32%;transform:scale(.48);transform-origin:top right}
       #student{left:20%;top:41%;transform:scale(.52);transform-origin:top left}
       #bigWarn{top:32%;font-size:24px;text-shadow:2px 2px 0 #fff}
-      #tapHint{bottom:58px;max-width:76%;font-size:11px;line-height:1.2;padding:4px 8px;border-width:2px;text-align:center}
+      #tapHint{display:none}
       #controls{bottom:8px;width:88%;gap:8px}
       button{min-height:42px;border-width:3px;border-radius:14px;font-size:clamp(15px,5vw,22px);box-shadow:0 5px 0 var(--ink)}
       button:active,button.active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
@@ -51,7 +51,6 @@
       #blackboard{display:none}
       #teacher{transform:scale(.43);right:2%;top:30%}
       #student{transform:scale(.46);left:17%;top:40%}
-      #tapHint{font-size:10px;bottom:54px}
       .pill{font-size:9px;padding:3px 4px}
     }
   </style>
