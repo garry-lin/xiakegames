@@ -20,10 +20,10 @@
     button:active, button.active { transform:translateY(7px); box-shadow:0 1px 0 var(--ink); }
     #playBtn { background:linear-gradient(#6ee7a8,#2fc776); }
     #studyBtn { background:linear-gradient(#7ed3ff,#37a6ff); }
-    #overlay { position:absolute; inset:0; z-index:4; display:grid; place-items:center; padding:14px; background:rgba(37,48,68,.54); backdrop-filter:blur(4px); }
+    #overlay { position:absolute; inset:0; z-index:4; display:grid; place-items:center; padding:14px; background:#fff8e8; }
     #overlay.hidden { display:none; }
-    #panel { width:min(94%,780px); max-height:94vh; overflow:auto; background:var(--paper); border:6px solid var(--ink); border-radius:26px; padding:22px; text-align:center; box-shadow:0 14px 0 rgba(37,48,68,.28); }
-    #panel h1 { margin:0 0 8px; font-size:clamp(38px,7vw,72px); line-height:.95; color:var(--red); text-shadow:3px 3px 0 var(--ink),6px 6px 0 var(--gold); }
+    #panel { width:min(94%,780px); max-height:calc(100vh - 28px); overflow:auto; background:var(--paper); border:6px solid var(--ink); border-radius:26px; padding:22px; text-align:center; box-shadow:0 14px 0 rgba(37,48,68,.28); }
+    #panel h1 { margin:0 0 8px; font-size:clamp(36px,6.2vw,60px); line-height:.95; color:var(--red); text-shadow:3px 3px 0 var(--ink),6px 6px 0 var(--gold); }
     #panel p { margin:7px 0; font-size:clamp(15px,2.2vw,18px); font-weight:900; line-height:1.45; }
     .small { opacity:.78; font-size:14px!important; }
     .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
@@ -48,6 +48,13 @@
       #panel { padding:16px 12px; border-width:4px; }
       #leaderboard { grid-template-columns:1fr; }
       .row { gap:8px; }
+    }
+    @media (max-height:620px) {
+      #panel { padding:14px 16px; border-width:4px; }
+      #panel h1 { font-size:clamp(30px,5vw,48px); margin-bottom:4px; }
+      #panel p { margin:4px 0; line-height:1.25; }
+      .modeBtn { min-height:58px; }
+      #startBtn, #leaderboard { display:none; }
     }
   </style>
 </head>
