@@ -24,3 +24,5 @@
   .two{gap:12px}.card{padding:16px;border-width:3px}
 }
 @media(max-width:380px){.links{grid-template-columns:repeat(2,minmax(0,1fr));font-size:13px}.brand{font-size:20px}.game-frame{height:310px}}
+
+.lang-switch{background:#253044!important;color:#fff!important;border-color:#253044!important}
